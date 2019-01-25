@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nithil/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run nithil/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t nithil/multi-client ./client
+  - docker build -t nithil/multi-nginx ./nginx
+  - docker build -t nithil/multi-server ./server
+  - docker build -t nithil/multi-worker ./worker
+
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"  --password-stdin
+
+  # Push the images to docker hub
+  - docker push nithil/multi-client
+  - docker push nithil/multi-nginx
+  - docker push nithil/multi-server
+  - docker push nithil/multi-worker
